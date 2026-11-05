@@ -46,6 +46,35 @@ INSERT INTO STAFF (Staff_ID, Staff_Name, Staff_Role, Contact, Supervisor_ID, Use
  (6, 'Rahul Verma',    'ASSISTANT_STYLIST',     '9800000006', 3,    NULL),
  (7, 'Anjali Gupta',   'ASSISTANT_STYLIST',     '9800000007', 4,    NULL);
 
+-- ---------------- DESIGNER ----------------
+INSERT INTO DESIGNER (Designer_ID, Designer_Name, Brand_Name, Contact, User_ID) VALUES
+ (1, 'Aarav Kapoor', 'Noir Atelier',  '9900000001', 2),
+ (2, 'Meera Iyer',   'Kesari',        '9900000002', 3),
+ (3, 'Rohan Das',    'Loom & Thread', '9900000003', 4),
+ (4, 'Isha Menon',   'Verdant',       '9900000004', 5);
+
+-- ---------------- COLLECTION ----------------
+INSERT INTO COLLECTION (Collection_ID, Collection_Name, Theme, Season, Designer_ID) VALUES
+ (1, 'Midnight Monolith', 'dark gothic streetwear with structured leather', 'AW26', 1),
+ (2, 'Concrete Bloom',    'brutalist tailoring softened with floral prints', 'SS27', 1),
+ (3, 'Saffron Hour',      'handwoven silk sarees reimagined as eveningwear',  'AW26', 2),
+ (4, 'Temple Lines',      'gold zari geometry inspired by temple architecture','RESORT27', 2),
+ (5, 'Warp and Weft',     'khadi denim and natural indigo dyeing',            'SS27', 3),
+ (6, 'Moss Theory',       'sustainable linen in forest greens',               'SS27', 4),
+ (7, 'Rewild',            'upcycled fabrics and botanical prints',            'AW26', 4);
+
+-- ---------------- bookings through the stored procedure ----------------
+-- (each call creates PAYMENT -> RECEIPT (trigger) -> ALLOCATED_TO in one transaction)
+CALL book_slot(1, 1, 1, 4, 'UPI',          '2026-11-20 16:00', '2026-11-20 18:00', @p, @r);
+CALL book_slot(2, 3, 1, 1, 'CARD',         '2026-11-20 08:00', '2026-11-20 10:00', @p, @r);
+CALL book_slot(3, 5, 2, 2, 'NETBANKING',   '2026-11-22 10:00', '2026-11-22 12:00', @p, @r);
+CALL book_slot(4, 6, 3, 1, 'BANK_TRANSFER','2026-11-24 14:00', '2026-11-24 16:00', @p, @r);
+CALL book_slot(2, 4, 2, 3, 'UPI',          '2026-11-22 17:00', '2026-11-22 19:00', @p, @r);
+
+-- a failed payment attempt (no receipt is generated for it)
+INSERT INTO PAYMENT (Amount, Payment_Mode, Status, Designer_ID, Venue_ID, Slot_No)
+VALUES (120000, 'CARD', 'FAILED', 3, 1, 2);
+
 -- ---------------- FACILITY ----------------
 INSERT INTO FACILITY (Facility_ID, Facility_Name, Facility_Type, Venue_ID) VALUES
  (1, 'East Wing Lounge',  'BACKSTAGE_LOUNGE', 1),
@@ -69,3 +98,7 @@ INSERT INTO USES (Model_ID, Facility_ID, Usage_Date) VALUES
  (1, 2, '2026-11-20'), (1, 1, '2026-11-20'), (2, 2, '2026-11-20'),
  (2, 5, '2026-11-22'), (3, 5, '2026-11-22'), (4, 7, '2026-11-24'),
  (5, 1, '2026-11-20');
+
+-- ---------------- WALKS_IN (M:N) ----------------
+INSERT INTO WALKS_IN (Model_ID, Collection_ID) VALUES
+ (1, 1), (2, 1), (5, 1), (1, 3), (3, 3), (2, 5), (3, 4), (4, 6), (5, 6);

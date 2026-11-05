@@ -76,6 +76,85 @@ ALTER TABLE STAFF
         REFERENCES STAFF(Staff_ID) ON DELETE SET NULL;
 
 -- ---------------------------------------------------------------------
+-- DESIGNER  (Ankitha)
+-- ---------------------------------------------------------------------
+CREATE TABLE DESIGNER (
+    Designer_ID    INT AUTO_INCREMENT PRIMARY KEY,
+    Designer_Name  VARCHAR(100) NOT NULL,
+    Brand_Name     VARCHAR(100) NOT NULL UNIQUE,
+    Contact        VARCHAR(15)  NOT NULL,
+    User_ID        INT          NULL UNIQUE,
+    CONSTRAINT chk_designer_contact CHECK (Contact REGEXP '^[0-9]{10}$'),
+    CONSTRAINT fk_designer_user FOREIGN KEY (User_ID)
+        REFERENCES USER_ACCOUNT(User_ID) ON DELETE SET NULL
+);
+
+-- ---------------------------------------------------------------------
+-- COLLECTION  (Ankitha)
+-- ---------------------------------------------------------------------
+CREATE TABLE COLLECTION (
+    Collection_ID    INT AUTO_INCREMENT PRIMARY KEY,
+    Collection_Name  VARCHAR(100) NOT NULL,
+    Theme            VARCHAR(255) NOT NULL,
+    Season           VARCHAR(20)  NOT NULL,
+    Designer_ID      INT          NOT NULL,
+    CONSTRAINT fk_collection_designer FOREIGN KEY (Designer_ID)
+        REFERENCES DESIGNER(Designer_ID) ON DELETE CASCADE,
+    CONSTRAINT uq_collection_name UNIQUE (Designer_ID, Collection_Name),
+    CONSTRAINT chk_collection_season CHECK (Season REGEXP '^(SS|AW|RESORT|PRE-FALL)[0-9]{2}$')
+);
+
+-- ---------------------------------------------------------------------
+-- PAYMENT  (Ankitha)  -- designer pays the fee for one specific slot
+-- ---------------------------------------------------------------------
+CREATE TABLE PAYMENT (
+    Payment_ID    INT AUTO_INCREMENT PRIMARY KEY,
+    Amount        DECIMAL(10,2) NOT NULL,
+    Payment_Date  DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Payment_Mode  VARCHAR(20)   NOT NULL,
+    Status        VARCHAR(10)   NOT NULL DEFAULT 'SUCCESS',
+    Designer_ID   INT           NOT NULL,
+    Venue_ID      INT           NOT NULL,
+    Slot_No       INT           NOT NULL,
+    CONSTRAINT fk_payment_designer FOREIGN KEY (Designer_ID)
+        REFERENCES DESIGNER(Designer_ID),
+    CONSTRAINT fk_payment_segment FOREIGN KEY (Venue_ID, Slot_No)
+        REFERENCES RUNWAY_SEGMENT(Venue_ID, Slot_No),
+    CONSTRAINT chk_payment_amount CHECK (Amount > 0),
+    CONSTRAINT chk_payment_mode   CHECK (Payment_Mode IN ('UPI','CARD','NETBANKING','BANK_TRANSFER')),
+    CONSTRAINT chk_payment_status CHECK (Status IN ('SUCCESS','FAILED','REFUNDED'))
+);
+
+-- ---------------------------------------------------------------------
+-- RECEIPT  (Ankitha)  -- 1:1 with PAYMENT (UNIQUE NOT NULL FK)
+-- ---------------------------------------------------------------------
+CREATE TABLE RECEIPT (
+    Receipt_No  INT AUTO_INCREMENT PRIMARY KEY,
+    Issue_Date  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Payment_ID  INT      NOT NULL UNIQUE,
+    CONSTRAINT fk_receipt_payment FOREIGN KEY (Payment_ID)
+        REFERENCES PAYMENT(Payment_ID)
+) AUTO_INCREMENT = 1001;
+
+-- ---------------------------------------------------------------------
+-- ALLOCATED_TO  (Ankitha)  -- COLLECTION 1:1 RUNWAY_SEGMENT, with attributes
+-- ---------------------------------------------------------------------
+CREATE TABLE ALLOCATED_TO (
+    Collection_ID    INT      NOT NULL PRIMARY KEY,
+    Venue_ID         INT      NOT NULL,
+    Slot_No          INT      NOT NULL,
+    Allocation_Date  DATE     NOT NULL DEFAULT (CURRENT_DATE),
+    Rehearsal_Time   DATETIME NOT NULL,
+    Show_Time        DATETIME NOT NULL,
+    CONSTRAINT fk_alloc_collection FOREIGN KEY (Collection_ID)
+        REFERENCES COLLECTION(Collection_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_alloc_segment FOREIGN KEY (Venue_ID, Slot_No)
+        REFERENCES RUNWAY_SEGMENT(Venue_ID, Slot_No),
+    CONSTRAINT uq_alloc_segment UNIQUE (Venue_ID, Slot_No),      -- one collection per slot
+    CONSTRAINT chk_alloc_times CHECK (Rehearsal_Time < Show_Time)
+);
+
+-- ---------------------------------------------------------------------
 -- FACILITY  (Ankita)
 -- ---------------------------------------------------------------------
 CREATE TABLE FACILITY (
@@ -114,4 +193,17 @@ CREATE TABLE USES (
         REFERENCES MODEL(Model_ID) ON DELETE CASCADE,
     CONSTRAINT fk_uses_facility FOREIGN KEY (Facility_ID)
         REFERENCES FACILITY(Facility_ID) ON DELETE CASCADE
+);
+
+-- ---------------------------------------------------------------------
+-- WALKS_IN  (Ankitha)  -- MODEL M:N COLLECTION
+-- ---------------------------------------------------------------------
+CREATE TABLE WALKS_IN (
+    Model_ID       INT NOT NULL,
+    Collection_ID  INT NOT NULL,
+    PRIMARY KEY (Model_ID, Collection_ID),
+    CONSTRAINT fk_walks_model FOREIGN KEY (Model_ID)
+        REFERENCES MODEL(Model_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_walks_collection FOREIGN KEY (Collection_ID)
+        REFERENCES COLLECTION(Collection_ID) ON DELETE CASCADE
 );

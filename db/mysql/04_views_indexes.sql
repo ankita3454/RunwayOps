@@ -1,6 +1,6 @@
 -- =====================================================================
 -- 04_views_indexes.sql  -- views (dashboards) + indexes + full-text search
--- Owner: Ankita
+-- Owner: Ankita (v_designer_payments: Ankitha)
 -- =====================================================================
 USE runwayops;
 
@@ -44,9 +44,23 @@ LEFT JOIN PAYMENT p ON p.Venue_ID = v.Venue_ID AND p.Status = 'SUCCESS'
 GROUP BY v.Venue_ID, v.Venue_Name;
 
 -- ---------------------------------------------------------------------
+-- [Ankitha] Payments with their receipts, per designer
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW v_designer_payments AS
+SELECT  p.Payment_ID, p.Designer_ID, d.Brand_Name, p.Amount, p.Payment_Mode,
+        p.Status, p.Payment_Date, p.Venue_ID, v.Venue_Name, p.Slot_No,
+        rc.Receipt_No, rc.Issue_Date
+FROM PAYMENT p
+JOIN DESIGNER d ON d.Designer_ID = p.Designer_ID
+JOIN VENUE    v ON v.Venue_ID    = p.Venue_ID
+LEFT JOIN RECEIPT rc ON rc.Payment_ID = p.Payment_ID;
+
+-- ---------------------------------------------------------------------
 -- Indexes
 -- ---------------------------------------------------------------------
 -- overlap trigger + "free slots on a date" both filter on venue + date + time
 CREATE INDEX idx_segment_venue_date ON RUNWAY_SEGMENT (Venue_ID, Slot_Date, Start_Time);
 -- revenue view and payment history filter on status and date
 CREATE INDEX idx_payment_status_date ON PAYMENT (Status, Payment_Date);
+-- full-text search over collections (search box in the app)
+CREATE FULLTEXT INDEX ftx_collection_search ON COLLECTION (Collection_Name, Theme);
