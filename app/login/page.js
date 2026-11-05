@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import ApiForm from '@/components/ApiForm';
 
 export default function Login() {
@@ -14,6 +15,7 @@ export default function Login() {
             { name: 'password', label: 'Password', type: 'password' },
           ]}
         />
+        <p className="switch">New designer or model? <Link href="/signup">Sign up</Link></p>
         <details className="demo">
           <summary>Demo accounts</summary>
           <ul>

@@ -92,6 +92,16 @@ button:disabled { opacity: .5; cursor: wait; }
   background: radial-gradient(circle at 20% 10%, #2a221a, var(--ink) 60%); }
 .login .card { background: var(--card); width: 100%; max-width: 400px; padding: 36px 32px; border-radius: 14px; }
 .logo { font-size: 2.6rem; margin-bottom: 1em; }
+.step { font-size: 1.2rem; margin: 0 0 14px; }
+.choices { display: grid; gap: 12px; }
+.choice { display: block; text-decoration: none; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: #fff; transition: border-color .12s, transform .12s; }
+.choice:hover { border-color: var(--ink); transform: translateY(-1px); }
+.choice b { display: block; font-family: var(--display); font-size: 1.25rem; margin-bottom: 2px; }
+.choice span { color: var(--muted); font-size: .9rem; }
+.small-note { font-size: .85rem; margin-top: 14px; }
+.switch.top { margin: -8px 0 10px; }
+.switch { margin-top: 18px; font-size: .9rem; color: var(--muted); }
+.switch a { color: var(--accent); font-weight: 600; }
 .demo { margin-top: 22px; font-size: .84rem; color: var(--muted); }
 .demo ul { padding-left: 18px; }
 .demo b { color: var(--ink); display: inline-block; width: 70px; }
