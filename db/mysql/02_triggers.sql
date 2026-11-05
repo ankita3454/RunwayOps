@@ -7,6 +7,9 @@ DROP TRIGGER IF EXISTS trg_no_slot_overlap;
 DROP TRIGGER IF EXISTS trg_no_slot_overlap_upd;
 DROP TRIGGER IF EXISTS trg_supervisor_check;
 DROP TRIGGER IF EXISTS trg_supervisor_check_upd;
+DROP TRIGGER IF EXISTS trg_allocation_check;
+DROP TRIGGER IF EXISTS trg_auto_receipt;
+DROP TRIGGER IF EXISTS trg_auto_receipt_upd;
 
 DELIMITER $$
 
@@ -90,6 +93,66 @@ BEGIN
             SIGNAL SQLSTATE '45000'
                 SET MESSAGE_TEXT = 'An ASSISTANT_STYLIST cannot supervise other staff';
         END IF;
+    END IF;
+END$$
+
+-- ---------------------------------------------------------------------
+-- [Ankitha] A collection may only be allocated to a slot that its designer
+-- has PAID for (SUCCESS), and the show must fall inside the slot window.
+-- ---------------------------------------------------------------------
+CREATE TRIGGER trg_allocation_check
+BEFORE INSERT ON ALLOCATED_TO
+FOR EACH ROW
+BEGIN
+    DECLARE v_designer INT;
+    DECLARE v_date DATE;
+    DECLARE v_start TIME;
+    DECLARE v_end TIME;
+
+    SELECT Designer_ID INTO v_designer
+    FROM COLLECTION WHERE Collection_ID = NEW.Collection_ID;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM PAYMENT p
+        WHERE p.Designer_ID = v_designer
+          AND p.Venue_ID    = NEW.Venue_ID
+          AND p.Slot_No     = NEW.Slot_No
+          AND p.Status      = 'SUCCESS'
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'No successful payment from this designer for this slot';
+    END IF;
+
+    SELECT Slot_Date, Start_Time, End_Time INTO v_date, v_start, v_end
+    FROM RUNWAY_SEGMENT WHERE Venue_ID = NEW.Venue_ID AND Slot_No = NEW.Slot_No;
+
+    IF DATE(NEW.Show_Time) <> v_date
+       OR TIME(NEW.Show_Time) < v_start
+       OR TIME(NEW.Show_Time) >= v_end THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Show time must fall inside the booked slot window';
+    END IF;
+END$$
+
+-- ---------------------------------------------------------------------
+-- [Ankitha] Every successful payment automatically gets a receipt
+-- ---------------------------------------------------------------------
+CREATE TRIGGER trg_auto_receipt
+AFTER INSERT ON PAYMENT
+FOR EACH ROW
+BEGIN
+    IF NEW.Status = 'SUCCESS' THEN
+        INSERT INTO RECEIPT (Payment_ID) VALUES (NEW.Payment_ID);
+    END IF;
+END$$
+
+CREATE TRIGGER trg_auto_receipt_upd
+AFTER UPDATE ON PAYMENT
+FOR EACH ROW
+BEGIN
+    IF NEW.Status = 'SUCCESS' AND OLD.Status <> 'SUCCESS'
+       AND NOT EXISTS (SELECT 1 FROM RECEIPT WHERE Payment_ID = NEW.Payment_ID) THEN
+        INSERT INTO RECEIPT (Payment_ID) VALUES (NEW.Payment_ID);
     END IF;
 END$$
 
