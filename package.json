@@ -1,0 +1,21 @@
+{
+  "name": "runwayops",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:setup": "node scripts/setup-db.mjs",
+    "test:db": "bash tests/sql_tests.sh"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^18.0.9",
+    "mysql2": "^3.24.6",
+    "next": "^15.5.29",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "redis": "^6.3.1"
+  }
+}
