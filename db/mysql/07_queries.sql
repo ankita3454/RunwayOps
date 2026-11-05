@@ -43,6 +43,37 @@ LEFT JOIN ALLOCATED_TO a ON a.Venue_ID = r.Venue_ID AND a.Slot_No = r.Slot_No
 WHERE a.Collection_ID IS NULL
 ORDER BY r.Slot_Date, r.Start_Time;
 
+-- Q5 [Ankitha] SUBQUERY: designers who paid more than the average designer
+SELECT d.Designer_Name, d.Brand_Name, fn_designer_total_paid(d.Designer_ID) AS Total_Paid
+FROM DESIGNER d
+WHERE fn_designer_total_paid(d.Designer_ID) > (
+    SELECT AVG(t.total) FROM (
+        SELECT SUM(Amount) AS total FROM PAYMENT
+        WHERE Status = 'SUCCESS' GROUP BY Designer_ID
+    ) t
+);
+
+-- Q6 [Ankitha] AGGREGATES + ORDER BY: booking stats per season
+SELECT c.Season, COUNT(a.Collection_ID) AS Booked, COUNT(*) AS Collections,
+       MIN(r.Slot_Fee) AS Cheapest, MAX(r.Slot_Fee) AS Priciest, AVG(r.Slot_Fee) AS Avg_Fee
+FROM COLLECTION c
+LEFT JOIN ALLOCATED_TO a   ON a.Collection_ID = c.Collection_ID
+LEFT JOIN RUNWAY_SEGMENT r ON r.Venue_ID = a.Venue_ID AND r.Slot_No = a.Slot_No
+GROUP BY c.Season
+ORDER BY Booked DESC;
+
+-- Q7 [Ankitha] Correlated subquery + NOT EXISTS: collections that have no slot yet
+SELECT c.Collection_Name, d.Brand_Name
+FROM COLLECTION c JOIN DESIGNER d ON d.Designer_ID = c.Designer_ID
+WHERE NOT EXISTS (SELECT 1 FROM ALLOCATED_TO a WHERE a.Collection_ID = c.Collection_ID);
+
+-- Q8 [Ankitha] FULL-TEXT SEARCH over collection names and themes
+SELECT Collection_Name, Theme,
+       MATCH(Collection_Name, Theme) AGAINST ('silk temple' IN NATURAL LANGUAGE MODE) AS Score
+FROM COLLECTION
+WHERE MATCH(Collection_Name, Theme) AGAINST ('silk temple' IN NATURAL LANGUAGE MODE)
+ORDER BY Score DESC;
+
 -- Q9 [Ankita] M:N: which models use which facility on which day
 SELECT m.Model_Name, f.Facility_Name, f.Facility_Type, v.Venue_Name, u.Usage_Date
 FROM USES u
