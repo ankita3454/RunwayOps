@@ -3,7 +3,7 @@ import Link from 'next/link';
 import ApiButton from './ApiButton';
 
 const NAV = {
-  ADMIN: [['/admin', 'Dashboard'], ['/admin/venues', 'Venues & slots'], ['/admin/staff', 'Staff'], ['/collections', 'Collections']],
+  ADMIN: [['/admin', 'Dashboard'], ['/admin/venues', 'Venues & slots'], ['/admin/staff', 'Staff'], ['/admin/users', 'Users'], ['/collections', 'Collections']],
   DESIGNER: [['/designer', 'My brand'], ['/designer/book', 'Book a slot'], ['/collections', 'Collections']],
   STAFF: [['/staff', 'Schedule & team'], ['/collections', 'Collections']],
   MODEL: [['/model', 'My shows'], ['/collections', 'Collections']],
